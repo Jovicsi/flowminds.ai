@@ -1,0 +1,12 @@
+{
+    "buildCommand": "cd flowminds.ai && npm run build",
+    "outputDirectory": "flowminds.ai/dist",
+    "installCommand": "cd flowminds.ai && npm install",
+    "framework": "vite",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}
