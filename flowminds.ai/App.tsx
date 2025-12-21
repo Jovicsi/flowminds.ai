@@ -48,6 +48,7 @@ export default function App() {
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [projectExistsInDb, setProjectExistsInDb] = useState(false);
     const [userRole, setUserRole] = useState<ProjectRole>('viewer');
     const [members, setMembers] = useState<ProjectMember[]>([]);
     const [showMembersModal, setShowMembersModal] = useState(false);
@@ -114,6 +115,7 @@ export default function App() {
                 if (data.edges) setEdges(data.edges);
                 if (data.name) setCurrentProjectName(data.name);
                 if (data.updated_at) setLastSaved(new Date(data.updated_at));
+                setProjectExistsInDb(true); // Mark as existing project
 
                 // Detecção de Role
                 if (data.user_id === user.id) {
@@ -150,6 +152,7 @@ export default function App() {
                 setEdges([]);
                 setCurrentProjectName('New Project');
                 setUserRole('owner');
+                setProjectExistsInDb(false); // New project not yet saved
             }
         } catch (err) {
             console.error("Load error:", err);
@@ -260,9 +263,16 @@ export default function App() {
         if (!silent) setIsSaving(true);
 
         try {
+            // Check if workflow exists and get original owner
+            const { data: existingWorkflow } = await supabase
+                .from('workflows')
+                .select('user_id')
+                .eq('id', roomId)
+                .single();
+
             const workflowData: any = {
                 id: roomId,
-                user_id: session.user.id,
+                user_id: existingWorkflow?.user_id || session.user.id, // Preserve original owner
                 name: name,
                 nodes,
                 edges,
@@ -294,12 +304,10 @@ export default function App() {
     const saveWorkflow = async (name: string) => {
         const success = await persistWorkflow(name);
         if (success) {
+            setProjectExistsInDb(true); // Mark as saved
+            setCurrentProjectName(name); // Update project name
             setShowSaveModal(false);
-            setView('gallery');
-            setRoomId(null);
-            setNodes([]);
-            setEdges([]);
-            window.history.replaceState({}, '', window.location.origin + window.location.pathname);
+            // Stay in editor - auto-save will handle future changes
         }
     };
 
@@ -323,6 +331,7 @@ export default function App() {
         setCurrentProjectName('New Project');
         setRoomId(newId);
         setUserRole('owner'); // Define imediatamente como dono
+        setProjectExistsInDb(false); // New project not yet saved
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('room', newId);
         window.history.pushState({}, '', newUrl.toString());
@@ -606,7 +615,7 @@ export default function App() {
                             <Users className="w-3.5 h-3.5" /> Members
                         </button>
                     )}
-                    {userRole !== 'viewer' && (
+                    {userRole !== 'viewer' && !projectExistsInDb && (
                         <button onClick={() => {
                             if (!roomId) {
                                 alert("Por favor, crie ou abra um projeto antes de salvar.");
@@ -616,6 +625,11 @@ export default function App() {
                         }} disabled={isSaving} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg text-xs font-medium text-emerald-400 transition-colors backdrop-blur-md">
                             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} {isSaving ? 'Saving...' : 'Save'}
                         </button>
+                    )}
+                    {projectExistsInDb && lastSaved && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg text-xs font-medium text-emerald-400/70 backdrop-blur-md">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Auto-saved {new Date(lastSaved).toLocaleTimeString()}
+                        </div>
                     )}
                     <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 rounded-lg text-xs font-medium text-slate-400 hover:text-red-400 transition-colors backdrop-blur-md">
                         <LogOut className="w-3.5 h-3.5" /> Sign Out
