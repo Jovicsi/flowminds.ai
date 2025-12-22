@@ -463,21 +463,21 @@ export default function App() {
         triggerAutoSave(1000); // Debounce text edits by 1s
     }, [broadcastChange, triggerAutoSave]);
 
-    const deleteNode = (id: string) => {
+    const deleteNode = useCallback((id: string) => {
         setNodes((prev) => prev.filter(n => n.id !== id));
         setEdges((prev) => prev.filter(e => e.source !== id && e.target !== id));
         broadcastChange({ type: 'node-delete', payload: id });
         triggerAutoSave(0); // Immediate save
-    };
+    }, [broadcastChange, triggerAutoSave]);
 
-    const executeGemini = async (nodeId: string) => {
+    const executeGemini = useCallback(async (nodeId: string) => {
         const node = nodes.find(n => n.id === nodeId);
         if (!node || !node.data.content) return;
         updateNode(nodeId, { isProcessing: true, result: '' });
         const result = await generateText(node.data.content);
         updateNode(nodeId, { isProcessing: false, result });
         triggerAutoSave(0); // Save result immediately
-    };
+    }, [nodes, updateNode, triggerAutoSave]);
 
     const executeAutoPlan = async () => {
         if (!autoPlanPrompt.trim()) return;

@@ -21,7 +21,7 @@ export const NodeComponent = React.memo<NodeComponentProps>(({ node, onUpdate, o
 
     return (
         <div
-            className={`absolute flex flex-col rounded-2xl border-2 shadow-2xl backdrop-blur-lg transition-all animate-in ${colors[node.data.color || 'slate']} 
+            className={`absolute flex flex-col rounded-2xl border-2 shadow-2xl backdrop-blur-lg transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out animate-in ${colors[node.data.color || 'slate']} 
         ${isSelected ? 'ring-2 ring-blue-500 scale-[1.02]' : 'hover:border-slate-500'}`}
             style={{ left: node.position.x, top: node.position.y, width: node.width }}
         >
