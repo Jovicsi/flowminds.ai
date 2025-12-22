@@ -65,6 +65,8 @@ export interface ProjectMember {
     user_email: string;
     role: ProjectRole;
     created_at: string;
+    display_name?: string;
+    avatar_url?: string;
 }
 
 // Events for Broadcast

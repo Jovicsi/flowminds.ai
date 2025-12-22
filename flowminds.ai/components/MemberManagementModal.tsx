@@ -30,7 +30,23 @@ export const MemberManagementModal: React.FC<Props> = ({ workflowId, onClose, is
                 }
                 throw error;
             }
-            setMembers(data || []);
+
+            // Fetch user metadata for each member
+            const membersWithMetadata = await Promise.all((data || []).map(async (member) => {
+                if (member.user_id) {
+                    const { data: userData } = await supabase.auth.admin.getUserById(member.user_id);
+                    if (userData?.user) {
+                        return {
+                            ...member,
+                            display_name: userData.user.user_metadata?.display_name || userData.user.user_metadata?.full_name,
+                            avatar_url: userData.user.user_metadata?.avatar_url || userData.user.user_metadata?.picture
+                        };
+                    }
+                }
+                return member;
+            }));
+
+            setMembers(membersWithMetadata);
         } catch (err) { console.error('Error fetching members:', err); }
         finally { setIsLoading(false); }
     };
@@ -178,11 +194,19 @@ export const MemberManagementModal: React.FC<Props> = ({ workflowId, onClose, is
                             <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
                                 {members.map(member => (
                                     <div key={member.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-white truncate">{member.user_email || 'User'}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <Shield className="w-3 h-3 text-blue-400" />
-                                                <span className="text-[10px] text-blue-400 font-bold uppercase">{member.role}</span>
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold uppercase overflow-hidden border-2 border-blue-500/20 flex-shrink-0">
+                                                {member.avatar_url ? (
+                                                    <img src={member.avatar_url} alt={member.display_name || member.user_email} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    (member.display_name || member.user_email)?.[0] || 'U'
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-medium text-white truncate">
+                                                    {member.display_name || member.user_email?.split('@')[0] || 'User'}
+                                                </p>
+                                                <p className="text-xs text-slate-400 truncate">({member.user_email})</p>
                                             </div>
                                         </div>
 

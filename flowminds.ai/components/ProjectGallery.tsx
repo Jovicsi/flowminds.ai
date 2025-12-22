@@ -91,6 +91,19 @@ export const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onSelectProject,
 
     const filtered = projects.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const loadUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        loadUser();
+    }, []);
+
+    const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || userEmail?.split('@')[0] || 'User';
+    const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+
     return (
         <div className="min-h-screen bg-background text-white p-8 animate-in">
             <div className="max-w-6xl mx-auto">
@@ -98,10 +111,14 @@ export const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onSelectProject,
                     <div><h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-accent">My Projects</h1></div>
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold uppercase">
-                                {userEmail?.[0] || 'U'}
+                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold uppercase overflow-hidden border-2 border-blue-500/20">
+                                {avatarUrl ? (
+                                    <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                                ) : (
+                                    displayName[0]
+                                )}
                             </div>
-                            <span className="text-sm font-medium text-slate-300">{userEmail}</span>
+                            <span className="text-sm font-medium text-slate-300">{displayName}</span>
                             <button onClick={onNavigateToProfile} className="ml-2 p-1.5 hover:bg-blue-500/10 text-slate-500 hover:text-blue-400 rounded-lg transition-all" title="Profile">
                                 <User className="w-4 h-4" />
                             </button>

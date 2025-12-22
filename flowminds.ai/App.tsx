@@ -81,10 +81,11 @@ export default function App() {
     const broadcastCursor = useCallback(
         throttle((x: number, y: number) => {
             if (channel) {
+                const displayName = session?.user?.user_metadata?.display_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || 'User';
                 channel.send({
                     type: 'broadcast',
                     event: 'cursor-move',
-                    payload: { id: instanceId, x, y, color: myColor, name: session?.user?.email?.split('@')[0] || 'User' }
+                    payload: { id: instanceId, x, y, color: myColor, name: displayName }
                 });
             }
         }, 50),
