@@ -424,6 +424,10 @@ export default function App() {
         };
         setNodes((prev) => [...prev, newNode]);
         broadcastChange({ type: 'node-create', payload: newNode });
+        // Trigger auto-save after adding node
+        if (projectExistsInDb && currentProjectName) {
+            persistWorkflow(currentProjectName, true);
+        }
     };
 
     const updateNode = (id: string, data: Partial<Node['data']>) => {
@@ -435,12 +439,20 @@ export default function App() {
             }
             return n;
         }));
+        // Trigger auto-save after updating node
+        if (projectExistsInDb && currentProjectName) {
+            persistWorkflow(currentProjectName, true);
+        }
     };
 
     const deleteNode = (id: string) => {
         setNodes((prev) => prev.filter(n => n.id !== id));
         setEdges((prev) => prev.filter(e => e.source !== id && e.target !== id));
         broadcastChange({ type: 'node-delete', payload: id });
+        // Trigger auto-save after deleting node
+        if (projectExistsInDb && currentProjectName) {
+            persistWorkflow(currentProjectName, true);
+        }
     };
 
     const executeGemini = async (nodeId: string) => {
@@ -527,15 +539,17 @@ export default function App() {
             broadcastCursor(worldPos.x, worldPos.y);
         }
         if (!dragItem) return;
-        const dx = e.clientX - dragItem.startPos.x;
-        const dy = e.clientY - dragItem.startPos.y;
+
         if (dragItem.type === 'viewport') {
+            const dx = e.clientX - dragItem.startPos.x;
+            const dy = e.clientY - dragItem.startPos.y;
             setViewport({ ...viewport, x: dragItem.currentPos.x + dx, y: dragItem.currentPos.y + dy });
         } else if (dragItem.type === 'node' && dragItem.id) {
-            const newX = dragItem.currentPos.x + (dx / viewport.zoom), newY = dragItem.currentPos.y + (dy / viewport.zoom);
+            // Calculate position directly from current mouse position for smooth dragging
+            const worldPos = screenToWorld(e.clientX, e.clientY);
             setNodes(prev => prev.map(n => {
                 if (n.id === dragItem.id) {
-                    const updated = { ...n, position: { x: newX, y: newY } };
+                    const updated = { ...n, position: worldPos };
                     broadcastChange({ type: 'node-update', payload: updated });
                     return updated;
                 }
@@ -560,9 +574,17 @@ export default function App() {
                         const newEdge = { id: crypto.randomUUID(), source: sId, target: tId };
                         setEdges(prev => [...prev, newEdge]);
                         broadcastChange({ type: 'edge-create', payload: newEdge });
+                        // Trigger auto-save after creating edge
+                        if (projectExistsInDb && currentProjectName) {
+                            persistWorkflow(currentProjectName, true);
+                        }
                     }
                 }
             }
+        }
+        // Trigger auto-save after node drag ends
+        if (dragItem?.type === 'node' && projectExistsInDb && currentProjectName) {
+            persistWorkflow(currentProjectName, true);
         }
         setDragItem(null);
         setDraftConnection(null);
