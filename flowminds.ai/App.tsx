@@ -49,6 +49,7 @@ export default function App() {
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [projectExistsInDb, setProjectExistsInDb] = useState(false);
+    const [originalOwnerId, setOriginalOwnerId] = useState<string | null>(null);
     const [userRole, setUserRole] = useState<ProjectRole>('viewer');
     const [members, setMembers] = useState<ProjectMember[]>([]);
     const [showMembersModal, setShowMembersModal] = useState(false);
@@ -116,6 +117,7 @@ export default function App() {
                 if (data.name) setCurrentProjectName(data.name);
                 if (data.updated_at) setLastSaved(new Date(data.updated_at));
                 setProjectExistsInDb(true); // Mark as existing project
+                setOriginalOwnerId(data.user_id); // Store original owner ID
 
                 // Detecção de Role
                 if (data.user_id === user.id) {
@@ -153,6 +155,7 @@ export default function App() {
                 setCurrentProjectName('New Project');
                 setUserRole('owner');
                 setProjectExistsInDb(false); // New project not yet saved
+                setOriginalOwnerId(null); // No owner yet
             }
         } catch (err) {
             console.error("Load error:", err);
@@ -263,21 +266,28 @@ export default function App() {
         if (!silent) setIsSaving(true);
 
         try {
-            // Check if workflow exists and get original owner
-            const { data: existingWorkflow } = await supabase
-                .from('workflows')
-                .select('user_id')
-                .eq('id', roomId)
-                .single();
+            // Use locally stored originalOwnerId to avoid RLS issues
+            // If originalOwnerId exists, use it (preserves owner)
+            // Otherwise, use current user (first save)
+            const finalUserId = originalOwnerId || session.user.id;
+
+            console.log('👤 [persistWorkflow] User IDs:', {
+                originalOwner: originalOwnerId,
+                currentUser: session.user.id,
+                finalUserId: finalUserId,
+                willPreserveOwner: !!originalOwnerId
+            });
 
             const workflowData: any = {
                 id: roomId,
-                user_id: existingWorkflow?.user_id || session.user.id, // Preserve original owner
+                user_id: finalUserId, // Preserve original owner
                 name: name,
                 nodes,
                 edges,
                 updated_at: new Date().toISOString()
             };
+
+            console.log('💾 [persistWorkflow] Saving with user_id:', finalUserId);
 
             const { error: firstError } = await supabase.from('workflows').upsert(workflowData, { onConflict: 'id' });
 
@@ -290,6 +300,14 @@ export default function App() {
                     throw firstError;
                 }
             }
+
+            console.log('✅ [persistWorkflow] Save successful!');
+
+            // Store the owner ID after first save
+            if (!originalOwnerId) {
+                setOriginalOwnerId(session.user.id);
+            }
+
             setLastSaved(new Date());
             return true;
         } catch (error: any) {
@@ -332,6 +350,7 @@ export default function App() {
         setRoomId(newId);
         setUserRole('owner'); // Define imediatamente como dono
         setProjectExistsInDb(false); // New project not yet saved
+        setOriginalOwnerId(null); // No owner yet
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('room', newId);
         window.history.pushState({}, '', newUrl.toString());
