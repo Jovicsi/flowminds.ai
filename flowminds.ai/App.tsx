@@ -92,6 +92,13 @@ export default function App() {
         [channel, myColor, instanceId, session]
     );
 
+    const broadcastNodeUpdate = useCallback(
+        throttle((node: Node) => {
+            broadcastChange({ type: 'node-update', payload: node });
+        }, 50), // Throttle to 50ms (20fps) for network efficiency
+        [broadcastChange]
+    );
+
     const initApp = useCallback(async (user: any) => {
         const params = new URLSearchParams(window.location.search);
         const urlRoomId = params.get('room');
@@ -570,7 +577,7 @@ export default function App() {
             setNodes(prev => prev.map(n => {
                 if (n.id === dragItem.id) {
                     const updated = { ...n, position: newPos };
-                    broadcastChange({ type: 'node-update', payload: updated });
+                    broadcastNodeUpdate(updated); // Use throttled broadcast
                     return updated;
                 }
                 return n;
