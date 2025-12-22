@@ -41,7 +41,7 @@ export const AuthPage: React.FC<{ onLogin: () => void }> = () => {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin
+                    redirectTo: 'https://flowminds-ai.vercel.app'
                 }
             });
             if (error) throw error;
