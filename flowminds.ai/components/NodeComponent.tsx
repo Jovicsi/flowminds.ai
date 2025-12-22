@@ -11,7 +11,7 @@ interface NodeComponentProps {
     readOnly?: boolean;
 }
 
-export const NodeComponent: React.FC<NodeComponentProps> = ({ node, onUpdate, onDelete, onGenerate, isSelected, readOnly = false }) => {
+export const NodeComponent = React.memo<NodeComponentProps>(({ node, onUpdate, onDelete, onGenerate, isSelected, readOnly = false }) => {
     const colors: Record<string, string> = {
         slate: 'border-slate-700 bg-slate-800/80',
         blue: 'border-blue-700 bg-blue-800/80',
@@ -92,4 +92,19 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node, onUpdate, on
             </div>
         </div>
     );
-};
+}, (prev, next) => {
+    // Custom comparison for performance
+    // Only re-render if:
+    // 1. Position changed (x, y)
+    // 2. Data changed (title, content, result, etc)
+    // 3. Selection status changed
+    // 4. ReadOnly status changed
+    return (
+        prev.node.position.x === next.node.position.x &&
+        prev.node.position.y === next.node.position.y &&
+        prev.node.data === next.node.data && // Simple ref check might fail if data is new object
+        JSON.stringify(prev.node.data) === JSON.stringify(next.node.data) && // Deep check for data safety
+        prev.isSelected === next.isSelected &&
+        prev.readOnly === next.readOnly
+    );
+});

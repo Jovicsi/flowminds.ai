@@ -420,6 +420,23 @@ export default function App() {
         return { x: node.position.x + node.width, y: node.position.y + 76 };
     }, [nodes]);
 
+    // --- Auto-Save Management ---
+    const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+    const triggerAutoSave = useCallback((delay: number = 1000) => {
+        if (!roomId || !currentProjectName) return;
+
+        // Clear existing timeout to ensure debounce (reset timer on new changes)
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = setTimeout(() => {
+            persistWorkflow(currentProjectName, true);
+            saveTimeoutRef.current = null;
+        }, delay);
+    }, [roomId, currentProjectName, persistWorkflow]);
+
     const addNode = (type: NodeType, pos?: Position) => {
         const newNode: Node = {
             id: crypto.randomUUID(),
@@ -431,13 +448,10 @@ export default function App() {
         };
         setNodes((prev) => [...prev, newNode]);
         broadcastChange({ type: 'node-create', payload: newNode });
-        // Trigger auto-save after adding node
-        if (roomId && currentProjectName) {
-            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
-        }
+        triggerAutoSave(0); // Immediate save
     };
 
-    const updateNode = (id: string, data: Partial<Node['data']>) => {
+    const updateNode = useCallback((id: string, data: Partial<Node['data']>) => {
         setNodes((prev) => prev.map(n => {
             if (n.id === id) {
                 const updated = { ...n, data: { ...n.data, ...data } };
@@ -446,20 +460,14 @@ export default function App() {
             }
             return n;
         }));
-        // Trigger auto-save after updating node
-        if (roomId && currentProjectName) {
-            setTimeout(() => persistWorkflow(currentProjectName, true), 500);
-        }
-    };
+        triggerAutoSave(1000); // Debounce text edits by 1s
+    }, [broadcastChange, triggerAutoSave]);
 
     const deleteNode = (id: string) => {
         setNodes((prev) => prev.filter(n => n.id !== id));
         setEdges((prev) => prev.filter(e => e.source !== id && e.target !== id));
         broadcastChange({ type: 'node-delete', payload: id });
-        // Trigger auto-save after deleting node
-        if (roomId && currentProjectName) {
-            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
-        }
+        triggerAutoSave(0); // Immediate save
     };
 
     const executeGemini = async (nodeId: string) => {
@@ -468,6 +476,7 @@ export default function App() {
         updateNode(nodeId, { isProcessing: true, result: '' });
         const result = await generateText(node.data.content);
         updateNode(nodeId, { isProcessing: false, result });
+        triggerAutoSave(0); // Save result immediately
     };
 
     const executeAutoPlan = async () => {
@@ -500,6 +509,7 @@ export default function App() {
         });
         setNodes(prev => [...prev, ...newNodes]);
         setEdges(prev => [...prev, ...newEdges]);
+        triggerAutoSave(0);
     };
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -601,22 +611,16 @@ export default function App() {
                         const newEdge = { id: crypto.randomUUID(), source: sId, target: tId };
                         setEdges(prev => [...prev, newEdge]);
                         broadcastChange({ type: 'edge-create', payload: newEdge });
-                        // Trigger auto-save after creating edge
-                        if (roomId && currentProjectName) {
-                            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
-                        }
-                        // Trigger auto-save after creating edge
-                        if (projectExistsInDb && currentProjectName) {
-                            persistWorkflow(currentProjectName, true);
-                        }
+                        triggerAutoSave(0); // Immediate save on connection
                     }
                 }
             }
         }
-        // Trigger auto-save after node drag ends
-        if (dragItem?.type === 'node' && roomId && currentProjectName) {
-            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
+
+        if (dragItem?.type === 'node') {
+            triggerAutoSave(0); // Immediate save on node release
         }
+
         setDragItem(null);
         setDraftConnection(null);
     };
@@ -750,16 +754,14 @@ export default function App() {
                         const newEdge = { id: crypto.randomUUID(), source: sId, target: tId };
                         setEdges(prev => [...prev, newEdge]);
                         broadcastChange({ type: 'edge-create', payload: newEdge });
-                        if (roomId && currentProjectName) {
-                            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
-                        }
+                        triggerAutoSave(0);
                     }
                 }
             }
         }
 
-        if (dragItem?.type === 'node' && roomId && currentProjectName) {
-            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
+        if (dragItem?.type === 'node') {
+            triggerAutoSave(0);
         }
 
         setDragItem(null);
@@ -778,7 +780,7 @@ export default function App() {
     if (view === 'gallery') return <ProjectGallery onSelectProject={openProject} onCreateNew={createNewProject} onLogout={handleLogout} userEmail={session?.user?.email} onNavigateToProfile={() => setView('profile')} />;
 
     return (
-        <div ref={containerRef} className="w-full h-full bg-background relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
+        <div ref={containerRef} className="w-full h-[100dvh] bg-background relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
             style={{ touchAction: 'none' }} // Critical for preventing browser scroll/zoom on mobile
             onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
             onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
@@ -797,7 +799,7 @@ export default function App() {
                 </svg>
 
                 {nodes.map(node => (
-                    <div key={node.id} onMouseDown={(e) => userRole !== 'viewer' && onNodeDragStart(e, node.id)}>
+                    <div key={node.id} data-node-id={node.id} onMouseDown={(e) => userRole !== 'viewer' && onNodeDragStart(e, node.id)}>
                         <NodeComponent
                             node={node}
                             onUpdate={updateNode}
