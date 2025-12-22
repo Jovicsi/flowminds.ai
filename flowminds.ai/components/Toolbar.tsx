@@ -9,35 +9,35 @@ interface ToolbarProps {
 
 export const Toolbar: React.FC<ToolbarProps> = ({ onAddNode, onAutoGenerate }) => {
     return (
-        <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 bg-slate-950/80 backdrop-blur-2xl border border-white/10 px-4 md:px-6 py-3 md:py-4 rounded-[28px] shadow-2xl z-50 animate-in slide-in-from-bottom-5 w-[90%] md:w-auto max-w-md justify-between md:justify-start">
-            <div className="flex items-center gap-2 pr-4 border-r border-white/10">
+        <div className="absolute bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-4 bg-slate-950/80 backdrop-blur-2xl border border-white/10 px-3 md:px-6 py-2.5 md:py-4 rounded-[28px] shadow-2xl z-50 animate-in slide-in-from-bottom-5 w-auto max-w-[95%] md:max-w-md justify-between md:justify-start whitespace-nowrap">
+            <div className="flex items-center gap-2 pr-2 md:pr-4 border-r border-white/10">
                 <button
                     onClick={() => onAddNode(NodeType.NOTE)}
                     className="flex flex-col items-center gap-1 group"
                 >
-                    <div className="w-12 h-12 bg-slate-800 group-hover:bg-blue-600/20 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-blue-500/30 transition-all">
-                        <StickyNote className="w-5 h-5 text-slate-400 group-hover:text-blue-400" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-800 group-hover:bg-blue-600/20 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-blue-500/30 transition-all">
+                        <StickyNote className="w-4 h-4 md:w-5 md:h-5 text-slate-400 group-hover:text-blue-400" />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-blue-400 uppercase tracking-widest">Note</span>
+                    <span className="text-[9px] md:text-[10px] font-bold text-slate-500 group-hover:text-blue-400 uppercase tracking-widest">Note</span>
                 </button>
 
                 <button
                     onClick={() => onAddNode(NodeType.GENERATOR)}
                     className="flex flex-col items-center gap-1 group"
                 >
-                    <div className="w-12 h-12 bg-slate-800 group-hover:bg-emerald-600/20 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-emerald-500/30 transition-all">
-                        <BrainCircuit className="w-5 h-5 text-slate-400 group-hover:text-emerald-400" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-800 group-hover:bg-emerald-600/20 rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-emerald-500/30 transition-all">
+                        <BrainCircuit className="w-4 h-4 md:w-5 md:h-5 text-slate-400 group-hover:text-emerald-400" />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 uppercase tracking-widest">AI Gen</span>
+                    <span className="text-[9px] md:text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 uppercase tracking-widest">AI Gen</span>
                 </button>
             </div>
 
             <button
                 onClick={onAutoGenerate}
-                className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-6 py-3.5 rounded-2xl font-bold shadow-lg shadow-blue-500/20 border border-white/10 transition-all hover:-translate-y-0.5"
+                className="flex items-center gap-2 md:gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-4 md:px-6 py-3 md:py-3.5 rounded-2xl font-bold shadow-lg shadow-blue-500/20 border border-white/10 transition-all hover:-translate-y-0.5"
             >
-                <Wand2 className="w-5 h-5 text-white animate-pulse" />
-                <span className="text-white whitespace-nowrap">AI Auto-Plan</span>
+                <Wand2 className="w-4 h-4 md:w-5 md:h-5 text-white animate-pulse" />
+                <span className="text-white text-sm md:text-base"><span className="hidden md:inline">AI </span>Auto-Plan</span>
             </button>
         </div>
     );

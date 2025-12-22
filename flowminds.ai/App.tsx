@@ -816,28 +816,28 @@ export default function App() {
                 ))}
             </div>
 
-            <div className="absolute top-6 left-6 z-50 flex items-start gap-8 pointer-events-none">
+            <div className="absolute top-0 left-0 w-full p-4 md:p-6 z-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pointer-events-none">
                 <div className="pointer-events-auto">
-                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-accent drop-shadow-sm flex items-center gap-2">
-                        <Grid className="w-6 h-6 text-blue-400" />
+                    <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-accent drop-shadow-sm flex items-center gap-2">
+                        <Grid className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
                         {currentProjectName}
                     </h1>
                     <div className="flex items-center gap-3 mt-1">
-                        <p className="text-xs text-slate-500 font-mono">{nodes.length} Nodes • Zoom {(viewport.zoom * 100).toFixed(0)}%</p>
+                        <p className="text-[10px] md:text-xs text-slate-500 font-mono">{nodes.length} Nodes • Zoom {(viewport.zoom * 100).toFixed(0)}%</p>
                         <button onClick={fitView} className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="Fit View"><Focus className="w-3 h-3" /></button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 pointer-events-auto">
-                    <button onClick={() => setView('gallery')} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-slate-300 transition-colors backdrop-blur-md">
-                        <Home className="w-3.5 h-3.5" /> Gallery
+                <div className="flex flex-wrap items-center gap-2 pointer-events-auto">
+                    <button onClick={() => setView('gallery')} className="flex items-center gap-2 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-slate-300 transition-colors backdrop-blur-md">
+                        <Home className="w-3.5 h-3.5" /> <span className="hidden md:inline">Gallery</span>
                     </button>
-                    <button onClick={() => setShowMembersModal(true)} className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 rounded-lg text-xs font-medium text-blue-400 transition-colors backdrop-blur-md">
-                        <Share2 className="w-3.5 h-3.5" /> Share
+                    <button onClick={() => setShowMembersModal(true)} className="flex items-center gap-2 px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 rounded-lg text-xs font-medium text-blue-400 transition-colors backdrop-blur-md">
+                        <Share2 className="w-3.5 h-3.5" /> <span className="hidden md:inline">Share</span>
                     </button>
                     {userRole === 'owner' && (
-                        <button onClick={() => setShowMembersModal(true)} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-slate-300 transition-colors backdrop-blur-md">
-                            <Users className="w-3.5 h-3.5" /> Members
+                        <button onClick={() => setShowMembersModal(true)} className="flex items-center gap-2 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-slate-300 transition-colors backdrop-blur-md">
+                            <Users className="w-3.5 h-3.5" /> <span className="hidden md:inline">Members</span>
                         </button>
                     )}
                     {userRole !== 'viewer' && !projectExistsInDb && (
@@ -847,17 +847,17 @@ export default function App() {
                                 return;
                             }
                             setShowSaveModal(true);
-                        }} disabled={isSaving} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg text-xs font-medium text-emerald-400 transition-colors backdrop-blur-md">
+                        }} disabled={isSaving} className="flex items-center gap-2 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg text-xs font-medium text-emerald-400 transition-colors backdrop-blur-md">
                             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} {isSaving ? 'Saving...' : 'Save'}
                         </button>
                     )}
                     {projectExistsInDb && lastSaved && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg text-xs font-medium text-emerald-400/70 backdrop-blur-md">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Auto-saved {new Date(lastSaved).toLocaleTimeString()}
+                        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg text-xs font-medium text-emerald-400/70 backdrop-blur-md">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> <span className="hidden md:inline">Auto-saved {new Date(lastSaved).toLocaleTimeString()}</span>
                         </div>
                     )}
-                    <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 rounded-lg text-xs font-medium text-slate-400 hover:text-red-400 transition-colors backdrop-blur-md">
-                        <LogOut className="w-3.5 h-3.5" /> Sign Out
+                    <button onClick={handleLogout} className="flex items-center gap-2 px-2.5 py-1.5 bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 rounded-lg text-xs font-medium text-slate-400 hover:text-red-400 transition-colors backdrop-blur-md">
+                        <LogOut className="w-3.5 h-3.5" />
                     </button>
                 </div>
             </div>
