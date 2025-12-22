@@ -9,7 +9,7 @@ interface ToolbarProps {
 
 export const Toolbar: React.FC<ToolbarProps> = ({ onAddNode, onAutoGenerate }) => {
     return (
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-950/80 backdrop-blur-2xl border border-white/10 px-6 py-4 rounded-[28px] shadow-2xl z-50 animate-in slide-in-from-bottom-5">
+        <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 bg-slate-950/80 backdrop-blur-2xl border border-white/10 px-4 md:px-6 py-3 md:py-4 rounded-[28px] shadow-2xl z-50 animate-in slide-in-from-bottom-5 w-[90%] md:w-auto max-w-md justify-between md:justify-start">
             <div className="flex items-center gap-2 pr-4 border-r border-white/10">
                 <button
                     onClick={() => onAddNode(NodeType.NOTE)}

@@ -105,29 +105,33 @@ export const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onSelectProject,
     const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
     return (
-        <div className="min-h-screen bg-background text-white p-8 animate-in">
+        <div className="min-h-screen bg-background text-white p-4 md:p-8 animate-in">
             <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-center mb-12">
-                    <div><h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-accent">My Projects</h1></div>
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold uppercase overflow-hidden border-2 border-blue-500/20">
-                                {avatarUrl ? (
-                                    <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-                                ) : (
-                                    displayName[0]
-                                )}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12 gap-6">
+                    <div><h1 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-accent">My Projects</h1></div>
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
+                        <div className="flex items-center justify-between md:justify-start gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/5 w-full md:w-auto">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold uppercase overflow-hidden border-2 border-blue-500/20">
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        displayName[0]
+                                    )}
+                                </div>
+                                <span className="text-sm font-medium text-slate-300 truncate max-w-[100px] md:max-w-none">{displayName}</span>
                             </div>
-                            <span className="text-sm font-medium text-slate-300">{displayName}</span>
-                            <button onClick={onNavigateToProfile} className="ml-2 p-1.5 hover:bg-blue-500/10 text-slate-500 hover:text-blue-400 rounded-lg transition-all" title="Profile">
-                                <User className="w-4 h-4" />
-                            </button>
-                            <button onClick={onLogout} className="p-1.5 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition-all" title="Sign Out">
-                                <LogOut className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center">
+                                <button onClick={onNavigateToProfile} className="ml-2 p-1.5 hover:bg-blue-500/10 text-slate-500 hover:text-blue-400 rounded-lg transition-all" title="Profile">
+                                    <User className="w-4 h-4" />
+                                </button>
+                                <button onClick={onLogout} className="p-1.5 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition-all" title="Sign Out">
+                                    <LogOut className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
-                        <button onClick={onCreateNew} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-bold shadow-xl transition-all hover:scale-105 active:scale-95">
-                            <Plus className="w-5 h-5" /> Create Project
+                        <button onClick={onCreateNew} className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-bold shadow-xl transition-all hover:scale-105 active:scale-95 w-full md:w-auto">
+                            <Plus className="w-5 h-5" /> <span className="md:hidden">New</span><span className="hidden md:inline">Create Project</span>
                         </button>
                     </div>
                 </div>

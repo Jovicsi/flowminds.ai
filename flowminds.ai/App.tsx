@@ -621,6 +621,151 @@ export default function App() {
         setDraftConnection(null);
     };
 
+    // --- Touch Event Handlers ---
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        // Prevent default only if we are dragging a node or panning, to allow button clicks etc.
+        // But for canvas app, usually we prevent default to stop scrolling.
+        const target = e.target as HTMLElement;
+
+        // If touching a button or input, let it be
+        if (target.closest('button') || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        const touch = e.touches[0];
+        const clientX = touch.clientX;
+        const clientY = touch.clientY;
+
+        // Check for Node
+        const nodeElement = target.closest('[data-node-id]');
+        if (nodeElement) {
+            const nodeId = nodeElement.getAttribute('data-node-id');
+            // Prevent inputs from being dragged
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('[data-handle-type]')) return;
+
+            if (nodeId) {
+                e.stopPropagation();
+                // e.preventDefault(); // Prevent scrolling when dragging node
+                const node = nodes.find(n => n.id === nodeId);
+                if (node) {
+                    setSelectedNodeId(nodeId);
+                    const worldMouse = screenToWorld(clientX, clientY);
+                    const offset = {
+                        x: worldMouse.x - node.position.x,
+                        y: worldMouse.y - node.position.y
+                    };
+                    setDragItem({
+                        type: 'node',
+                        id: nodeId,
+                        startPos: { x: clientX, y: clientY },
+                        currentPos: node.position,
+                        sourceHandle: offset
+                    });
+                }
+                return;
+            }
+        }
+
+        // Check for Handle (Connection)
+        const handle = target.closest('[data-handle-type]');
+        if (handle) {
+            e.stopPropagation();
+            const type = handle.getAttribute('data-handle-type') as 'source' | 'target';
+            const nodeId = handle.getAttribute('data-node-id');
+            if (nodeId) {
+                const node = nodes.find(n => n.id === nodeId);
+                if (node) {
+                    const worldMouse = screenToWorld(clientX, clientY);
+                    const startPos = type === 'source' ? getNodeCenterRight(nodeId) : getNodeCenterLeft(nodeId);
+                    setDraftConnection({ start: startPos, current: worldMouse });
+                    setDragItem({ type: 'connection', startPos: startPos, currentPos: worldMouse, sourceHandle: startPos, id: nodeId, handleType: type });
+                }
+            }
+            return;
+        }
+
+        // Canvas Pan
+        if (!target.closest('.node-drag-handle')) {
+            setDragItem({ type: 'viewport', startPos: { x: clientX, y: clientY }, currentPos: { x: viewport.x, y: viewport.y } });
+            setSelectedNodeId(null);
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!dragItem) return;
+        e.preventDefault(); // Prevent scrolling while dragging
+
+        const touch = e.touches[0];
+        const clientX = touch.clientX;
+        const clientY = touch.clientY;
+
+        if (session?.user && containerRef.current) {
+            const worldPos = screenToWorld(clientX, clientY);
+            broadcastCursor(worldPos.x, worldPos.y);
+        }
+
+        if (dragItem.type === 'viewport') {
+            const dx = clientX - dragItem.startPos.x;
+            const dy = clientY - dragItem.startPos.y;
+            setViewport({ ...viewport, x: dragItem.currentPos.x + dx, y: dragItem.currentPos.y + dy });
+        } else if (dragItem.type === 'node' && dragItem.id) {
+            const worldMouse = screenToWorld(clientX, clientY);
+            const offset = dragItem.sourceHandle || { x: 0, y: 0 };
+            const newPos = {
+                x: worldMouse.x - offset.x,
+                y: worldMouse.y - offset.y
+            };
+            setNodes(prev => prev.map(n => {
+                if (n.id === dragItem.id) {
+                    const updated = { ...n, position: newPos };
+                    broadcastNodeUpdate(updated);
+                    return updated;
+                }
+                return n;
+            }));
+        } else if (dragItem.type === 'connection') {
+            const worldMouse = screenToWorld(clientX, clientY);
+            setDraftConnection(prev => prev ? { ...prev, current: worldMouse } : null);
+        }
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        // For drop logic, we might need changedTouches
+        // Use standard logic
+        if (dragItem?.type === 'connection' && dragItem.id && dragItem.handleType) {
+            // Touch end target detection is tricky because touch end doesn't fire on the element below the finger if it moved.
+            // We use document.elementFromPoint
+            const touch = e.changedTouches[0];
+            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+            const target = targetElement?.closest('[data-handle-type]');
+
+            if (target) {
+                const targetType = target.getAttribute('data-handle-type'), targetNodeId = target.getAttribute('data-node-id');
+                if (targetNodeId && targetNodeId !== dragItem.id) {
+                    let sId = '', tId = '';
+                    if (dragItem.handleType === 'source' && targetType === 'target') { sId = dragItem.id; tId = targetNodeId; }
+                    else if (dragItem.handleType === 'target' && targetType === 'source') { sId = targetNodeId; tId = dragItem.id; }
+                    if (sId && tId && !edges.some(edge => edge.source === sId && edge.target === tId)) {
+                        const newEdge = { id: crypto.randomUUID(), source: sId, target: tId };
+                        setEdges(prev => [...prev, newEdge]);
+                        broadcastChange({ type: 'edge-create', payload: newEdge });
+                        if (roomId && currentProjectName) {
+                            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (dragItem?.type === 'node' && roomId && currentProjectName) {
+            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
+        }
+
+        setDragItem(null);
+        setDraftConnection(null);
+    };
+
     const handleWheel = (e: React.WheelEvent) => {
         const zoomSensitivity = 0.001;
         const newZoom = Math.min(Math.max(0.1, viewport.zoom - e.deltaY * zoomSensitivity), 5);
@@ -634,7 +779,10 @@ export default function App() {
 
     return (
         <div ref={containerRef} className="w-full h-full bg-background relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
-            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onWheel={handleWheel}>
+            style={{ touchAction: 'none' }} // Critical for preventing browser scroll/zoom on mobile
+            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
+            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
+            onWheel={handleWheel}>
 
             <div className="absolute inset-0 pointer-events-none opacity-20"
                 style={{
