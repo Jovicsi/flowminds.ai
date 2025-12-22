@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { Plus, LayoutGrid, Clock, ChevronRight, Search, Loader2, LogOut } from 'lucide-react';
+import { Plus, LayoutGrid, Clock, ChevronRight, Search, Loader2, LogOut, User } from 'lucide-react';
 
 interface Project {
     id: string;
@@ -14,10 +14,11 @@ interface ProjectGalleryProps {
     onSelectProject: (id: string, isOwner: boolean) => void;
     onCreateNew: () => void;
     onLogout: () => void;
+    onNavigateToProfile: () => void;
     userEmail?: string;
 }
 
-export const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onSelectProject, onCreateNew, onLogout, userEmail }) => {
+export const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onSelectProject, onCreateNew, onLogout, onNavigateToProfile, userEmail }) => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -101,7 +102,10 @@ export const ProjectGallery: React.FC<ProjectGalleryProps> = ({ onSelectProject,
                                 {userEmail?.[0] || 'U'}
                             </div>
                             <span className="text-sm font-medium text-slate-300">{userEmail}</span>
-                            <button onClick={onLogout} className="ml-2 p-1.5 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition-all" title="Sign Out">
+                            <button onClick={onNavigateToProfile} className="ml-2 p-1.5 hover:bg-blue-500/10 text-slate-500 hover:text-blue-400 rounded-lg transition-all" title="Profile">
+                                <User className="w-4 h-4" />
+                            </button>
+                            <button onClick={onLogout} className="p-1.5 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition-all" title="Sign Out">
                                 <LogOut className="w-4 h-4" />
                             </button>
                         </div>

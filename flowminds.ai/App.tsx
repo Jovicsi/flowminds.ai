@@ -12,6 +12,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { ProjectGallery } from './components/ProjectGallery';
 import { SaveProjectModal } from './components/SaveProjectModal';
 import { MemberManagementModal } from './components/MemberManagementModal';
+import { ProfilePage } from './components/ProfilePage';
 import { Users } from 'lucide-react';
 
 const INITIAL_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
@@ -43,7 +44,7 @@ export default function App() {
     const [copiedLink, setCopiedLink] = useState(false);
     const [instanceId] = useState(crypto.randomUUID());
 
-    const [view, setView] = useState<'editor' | 'gallery'>('gallery');
+    const [view, setView] = useState<'editor' | 'gallery' | 'profile'>('gallery');
     const [currentProjectName, setCurrentProjectName] = useState('Untitled Project');
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -574,7 +575,8 @@ export default function App() {
 
     if (isAuthChecking) return <div className="h-screen w-full flex items-center justify-center bg-background text-slate-500">Loading...</div>;
     if (!session) return <AuthPage onLogin={() => { }} />;
-    if (view === 'gallery') return <ProjectGallery onSelectProject={openProject} onCreateNew={createNewProject} onLogout={handleLogout} userEmail={session?.user?.email} />;
+    if (view === 'profile') return <ProfilePage onBack={() => setView('gallery')} userEmail={session?.user?.email} />;
+    if (view === 'gallery') return <ProjectGallery onSelectProject={openProject} onCreateNew={createNewProject} onLogout={handleLogout} userEmail={session?.user?.email} onNavigateToProfile={() => setView('profile')} />;
 
     return (
         <div ref={containerRef} className="w-full h-full bg-background relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
