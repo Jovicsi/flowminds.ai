@@ -425,8 +425,8 @@ export default function App() {
         setNodes((prev) => [...prev, newNode]);
         broadcastChange({ type: 'node-create', payload: newNode });
         // Trigger auto-save after adding node
-        if (projectExistsInDb && currentProjectName) {
-            persistWorkflow(currentProjectName, true);
+        if (roomId && currentProjectName) {
+            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
         }
     };
 
@@ -440,8 +440,8 @@ export default function App() {
             return n;
         }));
         // Trigger auto-save after updating node
-        if (projectExistsInDb && currentProjectName) {
-            persistWorkflow(currentProjectName, true);
+        if (roomId && currentProjectName) {
+            setTimeout(() => persistWorkflow(currentProjectName, true), 500);
         }
     };
 
@@ -450,8 +450,8 @@ export default function App() {
         setEdges((prev) => prev.filter(e => e.source !== id && e.target !== id));
         broadcastChange({ type: 'node-delete', payload: id });
         // Trigger auto-save after deleting node
-        if (projectExistsInDb && currentProjectName) {
-            persistWorkflow(currentProjectName, true);
+        if (roomId && currentProjectName) {
+            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
         }
     };
 
@@ -530,7 +530,21 @@ export default function App() {
         setSelectedNodeId(nodeId);
         const node = nodes.find(n => n.id === nodeId);
         if (!node) return;
-        setDragItem({ type: 'node', id: nodeId, startPos: { x: e.clientX, y: e.clientY }, currentPos: node.position });
+
+        // Calculate offset between mouse and node position for smooth dragging
+        const worldMouse = screenToWorld(e.clientX, e.clientY);
+        const offset = {
+            x: worldMouse.x - node.position.x,
+            y: worldMouse.y - node.position.y
+        };
+
+        setDragItem({
+            type: 'node',
+            id: nodeId,
+            startPos: { x: e.clientX, y: e.clientY },
+            currentPos: node.position,
+            sourceHandle: offset // Store offset in sourceHandle
+        });
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -545,11 +559,17 @@ export default function App() {
             const dy = e.clientY - dragItem.startPos.y;
             setViewport({ ...viewport, x: dragItem.currentPos.x + dx, y: dragItem.currentPos.y + dy });
         } else if (dragItem.type === 'node' && dragItem.id) {
-            // Calculate position directly from current mouse position for smooth dragging
-            const worldPos = screenToWorld(e.clientX, e.clientY);
+            // Use offset for smooth, natural dragging
+            const worldMouse = screenToWorld(e.clientX, e.clientY);
+            const offset = dragItem.sourceHandle || { x: 0, y: 0 };
+            const newPos = {
+                x: worldMouse.x - offset.x,
+                y: worldMouse.y - offset.y
+            };
+
             setNodes(prev => prev.map(n => {
                 if (n.id === dragItem.id) {
-                    const updated = { ...n, position: worldPos };
+                    const updated = { ...n, position: newPos };
                     broadcastChange({ type: 'node-update', payload: updated });
                     return updated;
                 }
@@ -575,6 +595,10 @@ export default function App() {
                         setEdges(prev => [...prev, newEdge]);
                         broadcastChange({ type: 'edge-create', payload: newEdge });
                         // Trigger auto-save after creating edge
+                        if (roomId && currentProjectName) {
+                            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
+                        }
+                        // Trigger auto-save after creating edge
                         if (projectExistsInDb && currentProjectName) {
                             persistWorkflow(currentProjectName, true);
                         }
@@ -583,8 +607,8 @@ export default function App() {
             }
         }
         // Trigger auto-save after node drag ends
-        if (dragItem?.type === 'node' && projectExistsInDb && currentProjectName) {
-            persistWorkflow(currentProjectName, true);
+        if (dragItem?.type === 'node' && roomId && currentProjectName) {
+            setTimeout(() => persistWorkflow(currentProjectName, true), 100);
         }
         setDragItem(null);
         setDraftConnection(null);
