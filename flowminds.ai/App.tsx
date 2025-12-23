@@ -304,16 +304,35 @@ export default function App() {
 
             console.log('💾 [persistWorkflow] Saving with user_id:', finalUserId);
 
-            const { error: firstError } = await supabase.from('workflows').upsert(workflowData, { onConflict: 'id' });
+            const { name: _name, ...baseData } = workflowData; // Backup in case we need to strip name for legacy tables (unlikely but kept logic)
 
-            if (firstError) {
-                if (firstError.message?.includes('column "name" of relation "workflows" does not exist')) {
-                    const { name: _, ...basicData } = workflowData;
-                    const { error: secondError } = await supabase.from('workflows').upsert(basicData, { onConflict: 'id' });
-                    if (secondError) throw secondError;
-                } else {
-                    throw firstError;
-                }
+            let error;
+
+            if (projectExistsInDb) {
+                // UPDATE: Do not send user_id, only update editable fields
+                console.log('💾 [persistWorkflow] Updating existing project...');
+                const { error: updateError } = await supabase
+                    .from('workflows')
+                    .update({
+                        name: workflowData.name,
+                        nodes: workflowData.nodes,
+                        edges: workflowData.edges,
+                        updated_at: workflowData.updated_at
+                    })
+                    .eq('id', roomId);
+                error = updateError;
+            } else {
+                // INSERT: Must include user_id
+                console.log('💾 [persistWorkflow] Creating new project...');
+                const { error: insertError } = await supabase
+                    .from('workflows')
+                    .insert(workflowData);
+                error = insertError;
+            }
+
+            if (error) {
+                console.error('Save error details:', error);
+                throw error;
             }
 
             console.log('✅ [persistWorkflow] Save successful!');
