@@ -34,10 +34,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onAddNode, onAutoGenerate }) =
 
             <button
                 onClick={onAutoGenerate}
-                className="flex items-center gap-2 md:gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-4 md:px-6 py-3 md:py-3.5 rounded-2xl font-bold shadow-lg shadow-blue-500/20 border border-white/10 transition-all hover:-translate-y-0.5"
+                className="flex items-center justify-center gap-2 md:gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-3.5 rounded-2xl font-bold shadow-lg shadow-blue-500/20 border border-white/10 transition-all hover:-translate-y-0.5"
+                title="AI Auto-Plan"
             >
-                <Wand2 className="w-4 h-4 md:w-5 md:h-5 text-white animate-pulse" />
-                <span className="text-white text-sm md:text-base"><span className="hidden md:inline">AI </span>Auto-Plan</span>
+                <Wand2 className="w-5 h-5 md:w-5 md:h-5 text-white animate-pulse" />
+                <span className="hidden md:inline text-white text-base">AI Auto-Plan</span>
             </button>
         </div>
     );

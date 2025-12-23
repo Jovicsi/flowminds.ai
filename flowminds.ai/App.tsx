@@ -6,7 +6,7 @@ import { Toolbar } from './components/Toolbar';
 import { AuthPage } from './components/AuthPage';
 import { Cursor } from './components/Cursor';
 import { generateText, enhanceWorkflowIdea } from './services/geminiService';
-import { Grid, MousePointer2, BrainCircuit, LogOut, Save, Loader2, CheckCircle2, Focus, Share2, Copy, Home } from 'lucide-react';
+import { Grid, MousePointer2, BrainCircuit, LogOut, Save, Loader2, CheckCircle2, Focus, Share2, Copy, Home, Menu, X } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { ProjectGallery } from './components/ProjectGallery';
@@ -48,6 +48,7 @@ export default function App() {
     const [currentProjectName, setCurrentProjectName] = useState('Untitled Project');
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile Menu State
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [projectExistsInDb, setProjectExistsInDb] = useState(false);
     const [originalOwnerId, setOriginalOwnerId] = useState<string | null>(null);
@@ -828,7 +829,8 @@ export default function App() {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 pointer-events-auto">
+                {/* Desktop Menu */}
+                <div className="hidden md:flex items-center gap-2 pointer-events-auto">
                     <button onClick={() => setView('gallery')} className="flex items-center gap-2 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-slate-300 transition-colors backdrop-blur-md">
                         <Home className="w-3.5 h-3.5" /> <span className="hidden md:inline">Gallery</span>
                     </button>
@@ -859,6 +861,44 @@ export default function App() {
                     <button onClick={handleLogout} className="flex items-center gap-2 px-2.5 py-1.5 bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 rounded-lg text-xs font-medium text-slate-400 hover:text-red-400 transition-colors backdrop-blur-md">
                         <LogOut className="w-3.5 h-3.5" />
                     </button>
+                </div>
+
+                {/* Mobile Hamburger Menu */}
+                <div className="md:hidden pointer-events-auto relative">
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="p-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg text-slate-300 hover:text-white hover:bg-white/20 transition-all"
+                    >
+                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
+
+                    {isMobileMenuOpen && (
+                        <div className="absolute right-0 top-12 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 origin-top-right">
+                            <button onClick={() => { setView('gallery'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-sm text-slate-300 transition-colors text-left w-full">
+                                <Home className="w-4 h-4 text-slate-400" /> Gallery
+                            </button>
+                            <button onClick={() => { setShowMembersModal(true); setIsMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-500/10 text-sm text-blue-400 transition-colors text-left w-full">
+                                <Share2 className="w-4 h-4" /> Share Project
+                            </button>
+                            {userRole === 'owner' && (
+                                <button onClick={() => { setShowMembersModal(true); setIsMobileMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-sm text-slate-300 transition-colors text-left w-full">
+                                    <Users className="w-4 h-4 text-slate-400" /> Members
+                                </button>
+                            )}
+                            {userRole !== 'viewer' && !projectExistsInDb && (
+                                <button onClick={() => {
+                                    if (!roomId) { alert("Crie um projeto antes."); return; }
+                                    setShowSaveModal(true); setIsMobileMenuOpen(false);
+                                }} disabled={isSaving} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-emerald-500/10 text-sm text-emerald-400 transition-colors text-left w-full">
+                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Project
+                                </button>
+                            )}
+                            <div className="h-px bg-white/10 my-1" />
+                            <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-500/10 text-sm text-red-400 transition-colors text-left w-full">
+                                <LogOut className="w-4 h-4" /> Sign Out
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
