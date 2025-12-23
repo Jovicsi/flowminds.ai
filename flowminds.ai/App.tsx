@@ -817,7 +817,7 @@ export default function App() {
                 ))}
             </div>
 
-            <div className="absolute top-0 left-0 w-full p-4 md:p-6 z-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pointer-events-none">
+            <div className="absolute top-0 left-0 w-full p-4 md:p-6 z-50 flex flex-row justify-between items-start md:items-center gap-4 pointer-events-none">
                 <div className="pointer-events-auto">
                     <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-accent drop-shadow-sm flex items-center gap-2">
                         <Grid className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
