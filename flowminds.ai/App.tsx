@@ -6,7 +6,7 @@ import { Toolbar } from './components/Toolbar';
 import { AuthPage } from './components/AuthPage';
 import { Cursor } from './components/Cursor';
 import { generateText, enhanceWorkflowIdea } from './services/geminiService';
-import { Grid, MousePointer2, BrainCircuit, LogOut, Save, Loader2, CheckCircle2, Focus, Share2, Copy, Home, Menu, X } from 'lucide-react';
+import { Grid, MousePointer2, BrainCircuit, LogOut, Save, Loader2, CheckCircle2, Focus, Share2, Copy, Home, Menu, X, Pencil } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { ProjectGallery } from './components/ProjectGallery';
@@ -290,12 +290,17 @@ export default function App() {
 
             const workflowData: any = {
                 id: roomId,
-                user_id: finalUserId, // Preserve original owner
                 name: name,
                 nodes,
                 edges,
                 updated_at: new Date().toISOString()
             };
+
+            // Only include user_id if creating a NEW project (first save)
+            // Sending user_id on update triggers RLS violation for non-owners (Editors)
+            if (!projectExistsInDb) {
+                workflowData.user_id = finalUserId;
+            }
 
             console.log('💾 [persistWorkflow] Saving with user_id:', finalUserId);
 
@@ -822,6 +827,13 @@ export default function App() {
                     <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-accent drop-shadow-sm flex items-center gap-2">
                         <Grid className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
                         {currentProjectName}
+                        <button
+                            onClick={() => setShowSaveModal(true)}
+                            className="p-1.5 ml-1 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors group"
+                            title="Rename Project"
+                        >
+                            <Pencil className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:scale-110 transition-transform" />
+                        </button>
                     </h1>
                     <div className="flex items-center gap-3 mt-1">
                         <p className="text-[10px] md:text-xs text-slate-500 font-mono">{nodes.length} Nodes • Zoom {(viewport.zoom * 100).toFixed(0)}%</p>
